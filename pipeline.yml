@@ -1,0 +1,31 @@
+pipelines:
+  nginx-deploy:
+    group: WebServers
+    materials:
+      - git:
+          url: https://github.com/your-repo/nginx-deploy.git
+          branch: main
+    stages:
+      - Build:
+          jobs:
+            - BuildImage:
+                tasks:
+                  - exec:
+                      command: docker
+                      arguments: ["build", "-t", "nginx-website", "."]
+                  - exec:
+                      command: docker
+                      arguments: ["run", "--rm", "nginx-website", "nginx", "-t"]
+      - Deploy:
+          jobs:
+            - DeployToServer:
+                tasks:
+                  - exec:
+                      command: docker
+                      arguments: ["run", "-d", "-p", "80:80", "--name", "nginx-container", "nginx-website"]
+                  - exec:
+                      command: docker
+                      arguments: ["exec", "nginx-container", "nginx", "-s", "reload"]
+                  - exec:
+                      command: echo
+                      arguments: ["Website successfully deployed on Nginx"]
